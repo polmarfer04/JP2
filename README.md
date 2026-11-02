@@ -43,7 +43,7 @@ Producción requiere HTTPS en el navegador: la cookie de sesión es Secure y Htt
 ## Incluido
 
 - Inicio privado con cuenta atrás, ruta de la familia, actividad próxima e ideas recientes.
-- Calendarios MF, HG y Todos: rutas distintas del 6 al 9 de diciembre y planes compartidos del 1 al 6 y del 9 al 14. Invitaciones de Supabase con elección individual de contraseña.
+- Calendarios MF, HG y Todos: rutas distintas del 6 al 9 de diciembre y planes compartidos del 1 al 7 y del 9 al 14. Invitaciones de Supabase con elección individual de contraseña.
 - Calendario de 18 días y vista por ciudad. Crear, editar y eliminar actividades, fechas y horas para reorganizarlas.
 - Itinerario inicialmente vacío para añadir los planes del grupo. Se mantienen las fechas del viaje y la ruta. No existe un menú Ciudades separado; las tarjetas de destino abren el itinerario filtrado.
 - Muro con enlaces originales, categorías, filtros, búsqueda, estados, favoritos personales, comentarios y tres tipos de voto por persona.

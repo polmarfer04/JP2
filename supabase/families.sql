@@ -36,7 +36,7 @@ BEGIN
  IF NEW.type='activity' THEN
   IF coalesce(NEW.data->>'date','') !~ '^2026-(11|12)-[0-9]{2}$' THEN RAISE EXCEPTION 'Fecha obligatoria'; END IF;
   IF (NEW.data->>'date')::date NOT BETWEEN DATE '2026-11-28' AND DATE '2026-12-15' THEN RAISE EXCEPTION 'Fecha fuera del viaje'; END IF;
-  IF NEW.data->>'family'='Todos' AND NOT (((NEW.data->>'date') BETWEEN '2026-12-01' AND '2026-12-06') OR ((NEW.data->>'date') BETWEEN '2026-12-09' AND '2026-12-14')) THEN RAISE EXCEPTION 'Todos solo admite los días compartidos (1–6 y 9–14 de diciembre)'; END IF;
+  IF NEW.data->>'family'='Todos' AND NOT (((NEW.data->>'date') BETWEEN '2026-12-01' AND '2026-12-07') OR ((NEW.data->>'date') BETWEEN '2026-12-09' AND '2026-12-14')) THEN RAISE EXCEPTION 'Todos solo admite los días compartidos (1–7 y 9–14 de diciembre)'; END IF;
  END IF;
  IF coalesce(NEW.data->>'time','')<>'' AND (NEW.data->>'time') !~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' THEN RAISE EXCEPTION 'Hora incorrecta'; END IF;
  RETURN NEW;
@@ -47,7 +47,7 @@ CREATE TRIGGER validate_trip_item BEFORE INSERT OR UPDATE ON public.items FOR EA
 
 -- Classify existing plans once, without overwriting an explicit family assignment.
 UPDATE public.items i SET data=jsonb_set(i.data,'{family}',to_jsonb(
- CASE WHEN (i.data->>'date' BETWEEN '2026-12-01' AND '2026-12-06') OR (i.data->>'date' BETWEEN '2026-12-09' AND '2026-12-14') THEN 'Todos'
+ CASE WHEN (i.data->>'date' BETWEEN '2026-12-01' AND '2026-12-07') OR (i.data->>'date' BETWEEN '2026-12-09' AND '2026-12-14') THEN 'Todos'
  ELSE coalesce((SELECT p.family FROM public.profiles p WHERE p.id=i.author),'MF') END
 )) WHERE i.type='activity' AND NOT i.data ? 'family';
 COMMIT;

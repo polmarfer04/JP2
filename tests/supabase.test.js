@@ -49,6 +49,7 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  assert.equal((await pg.query("SELECT * FROM public.items WHERE id='test-activity'")).rows.length,0);
  await pg.exec(readFileSync('supabase/families.sql','utf8'));
  await pg.exec(readFileSync('supabase/families.sql','utf8'));
+ await pg.exec(readFileSync('supabase/takayama-shared.sql','utf8'));
  assert.equal((await pg.query("SELECT auth_id,family FROM public.profiles WHERE id='pol'")).rows[0].auth_id,pol);
  assert.equal((await pg.query("SELECT family FROM public.profiles WHERE id='pol'")).rows[0].family,'MF');
  assert.equal((await pg.query("SELECT count(*)::int AS n FROM public.profiles WHERE family='HG'")).rows[0].n,4);
@@ -56,6 +57,7 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  await as(outsider);
  const hgData={title:'Plan HG',date:'2026-12-07',city:'Takayama',family:'HG',participants:['alvaro','carla','walter','lourdes']};
  await pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'alvaro')",[JSON.stringify(hgData)]);
+ await pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'alvaro')",[JSON.stringify({...hgData,family:'Todos'})]);
  await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'alvaro')",[JSON.stringify({...hgData,date:'2026-12-08',family:'Todos'})]),/días compartidos/);
  await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'alvaro')",[JSON.stringify({...hgData,participants:['unknown']})]),/Participantes/);
  await assert.rejects(pg.query("UPDATE public.profiles SET family='MF' WHERE id='alvaro'"),/permission denied/);

@@ -1,6 +1,6 @@
 export const families = {MF:'Marhuenda Fernández',HG:'Hoffmann Gaspar'};
 export function isSharedDate(date) {
-  return (date >= '2026-12-01' && date <= '2026-12-06') ||
+  return (date >= '2026-12-01' && date <= '2026-12-07') ||
     (date >= '2026-12-09' && date <= '2026-12-14');
 }
 export function activityFamily(item, users=[]) {
@@ -18,6 +18,7 @@ export function visibleDate(date, family) {
 }
 export function destinationForDate(date,family) {
   if (family==='Todos') {
+    if(date==='2026-12-07')return 'Takayama · Día compartido';
     if(date>='2026-12-01'&&date<='2026-12-03') return date==='2026-12-03'?'Osaka → Kioto':'Osaka';
     if(date>='2026-12-04'&&date<='2026-12-06') return date==='2026-12-06'?'Kioto · Antes de separar las rutas':'Kioto';
     return date==='2026-12-09'?'Tokio · Reencuentro':'Tokio';
@@ -42,6 +43,6 @@ export function destinationForDate(date,family) {
 }
 export function cityDates(city,family) {
   const dates={Osaka:family==='HG'?'1 — 3 DIC':'29 NOV — 3 DIC',Kioto:'3 — 6 DIC',Takayama:family==='HG'?'7 — 9 DIC':'6 — 8 DIC',Kanazawa:family==='HG'?'6 — 7 DIC':'8 — 9 DIC',Tokio:'9 — 14 DIC',Kobe:'2 DIC'};
-  if(family==='Todos')return {Osaka:'1 — 3 DIC',Kioto:'3 — 6 DIC',Tokio:'9 — 14 DIC',Kobe:'2 DIC'}[city]||'';
+  if(family==='Todos')return {Osaka:'1 — 3 DIC',Kioto:'3 — 6 DIC',Takayama:'7 DIC',Tokio:'9 — 14 DIC',Kobe:'2 DIC'}[city]||'';
   return dates[city]||'';
 }
