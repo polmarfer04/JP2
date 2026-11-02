@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: japon-2026
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: node server/production.js
+    healthCheckPath: /api/session
+    disk:
+      name: japon-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data
+      - key: PASSWORD_POL
+        sync: false
+      - key: PASSWORD_MONICA
+        sync: false
+      - key: PASSWORD_LEYRE
+        sync: false
+      - key: PASSWORD_JOAQUIN
+        sync: false

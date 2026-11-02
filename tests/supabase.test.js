@@ -1,0 +1,52 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+
+test('Supabase PostgreSQL schema: membership, RLS, validation, transactional scheduling, idempotent seeds', async()=>{
+ const pg=new PGlite();
+ try {
+ await pg.exec(`CREATE ROLE anon NOLOGIN; CREATE ROLE authenticated NOLOGIN;
+ CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY);
+ CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+ GRANT USAGE ON SCHEMA auth TO anon,authenticated;
+ CREATE PUBLICATION supabase_realtime;`);
+ const schema=readFileSync('supabase/setup.sql','utf8'); await pg.exec(schema);
+ const pol='10000000-0000-4000-8000-000000000001',monica='10000000-0000-4000-8000-000000000002',outsider='10000000-0000-4000-8000-000000000099';
+ await pg.query('INSERT INTO auth.users VALUES($1),($2),($3)',[pol,monica,outsider]);
+ await pg.query("UPDATE public.profiles SET auth_id=$1 WHERE id='pol'",[pol]);
+ await pg.query("UPDATE public.profiles SET auth_id=$1 WHERE id='monica'",[monica]);
+ const as=async(id,role='authenticated')=>{await pg.exec('RESET ROLE');await pg.query("SELECT set_config('request.jwt.claim.sub',$1,false)",[id]);await pg.exec('SET ROLE '+role);};
+ await as('','anon');await assert.rejects(pg.query('SELECT * FROM public.items'),/permission denied/);
+ await as(outsider);assert.equal((await pg.query('SELECT * FROM public.items')).rows.length,0);
+ await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('tip','{\"title\":\"Intruder\"}','pol')"),/row-level security/);
+ await as(pol);assert.equal((await pg.query('SELECT * FROM public.profiles')).rows.length,4);
+ let cruise=(await pg.query("SELECT data FROM public.items WHERE id='cruise'")).rows[0].data;
+ assert.equal(cruise.date,'2026-11-29');assert.equal(cruise.time,'20:10');
+ assert.equal((await pg.query("SELECT data->>'date' AS date FROM public.items WHERE id='shirakawa'")).rows[0].date,'2026-12-08');
+ await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('idea','{\"title\":\"Unsafe\",\"url\":\"javascript:alert(1)\"}','pol')"),/http/);
+ await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('tip','{\"title\":\"Spoof\"}','monica')"),/row-level security/);
+ await assert.rejects(pg.query("UPDATE public.profiles SET auth_id=$1 WHERE id='leyre'",[outsider]),/permission denied/);
+ const id=(await pg.query("INSERT INTO public.items(type,data,author) VALUES('idea',$1,'pol') RETURNING id",[JSON.stringify({title:'Ramen',url:'https://example.com',city:'Tokio',status:'Nueva'})])).rows[0].id;
+ await pg.query("INSERT INTO public.votes VALUES($1,'pol','encanta')",[id]);
+ await pg.query("INSERT INTO public.favorites VALUES($1,'pol')",[id]);
+ await as(monica);assert.ok((await pg.query('SELECT * FROM public.items WHERE id=$1',[id])).rows.length);
+ assert.equal((await pg.query('SELECT * FROM public.favorites')).rows.length,0);
+ assert.equal((await pg.query("UPDATE public.votes SET value='no' WHERE user_id='pol' RETURNING *")).rows.length,0);
+ await assert.rejects(pg.query("INSERT INTO public.favorites VALUES($1,'pol')",[id]),/row-level security/);
+ await pg.query("INSERT INTO public.comments(item_id,author,body) VALUES($1,'monica','¡Vamos!')",[id]);
+ await pg.query("INSERT INTO public.votes VALUES($1,'monica','interesa')",[id]);
+ await assert.rejects(pg.query("SELECT public.schedule_idea($1,$2)",[id,JSON.stringify({title:'Ramen',date:'2026-12-99'})]),/date|fecha/i);
+ assert.equal((await pg.query('SELECT data FROM public.items WHERE id=$1',[id])).rows[0].data.status,'Nueva');
+ const activity={title:'Ramen',date:'2026-12-10',city:'Tokio',time:'12:30',status:'Planeada'};
+ await pg.query('SELECT public.schedule_idea($1,$2)',[id,JSON.stringify(activity)]);
+ await assert.rejects(pg.query('SELECT public.schedule_idea($1,$2)',[id,JSON.stringify(activity)]),/ya está/);
+ assert.equal((await pg.query("SELECT * FROM public.items WHERE type='activity' AND data->>'title'='Ramen'")).rows.length,1);
+ await pg.query('SELECT public.edit_item($1,$2)',[id,JSON.stringify({description:'Notas compartidas'})]);
+ assert.equal((await pg.query('SELECT data FROM public.items WHERE id=$1',[id])).rows[0].data.title,'Ramen');
+ await assert.rejects(pg.query("UPDATE public.items SET author='monica' WHERE id=$1",[id]),/autoría/);
+ await pg.query("DELETE FROM public.items WHERE id='cruise'");
+ await pg.exec('RESET ROLE');await pg.exec(schema);
+ assert.equal((await pg.query("SELECT * FROM public.items WHERE id='cruise'")).rows.length,0);
+ } finally {await pg.close();}
+});
