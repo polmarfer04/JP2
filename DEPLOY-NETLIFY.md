@@ -7,7 +7,7 @@ Esta opción no necesita servidor Node en Netlify ni disco de Render. Netlify al
 Usa un proyecto dedicado a esta aplicación, porque el esquema crea tablas con nombres como `items` y `profiles`.
 
 1. Abre **SQL Editor** y ejecuta el contenido completo de `supabase/setup.sql`. Crea tablas, permisos por fila (RLS), funciones, Realtime y un itinerario vacío. Se puede repetir sin restaurar actividades borradas.
-2. En **Authentication → Users → Add user → Create new user**, crea los cuatro usuarios con sus correos y contraseñas propias. Si eliges confirmarlos manualmente, verifica antes que cada dirección es correcta. No uses el flujo de invitación por correo: esta versión todavía no tiene pantalla para establecer contraseñas desde invitaciones.
+2. En **Authentication → Users → Add user → Create new user**, crea los cuatro usuarios con sus correos y contraseñas propias. Si eliges confirmarlos manualmente, verifica antes que cada dirección es correcta. También puedes invitarlos por correo siguiendo el procedimiento de invitaciones de familias al final de esta guía.
 3. Copia los cuatro User UID y sustituye los marcadores de `supabase/members.example.sql`. Ejecuta ese archivo en SQL Editor para vincular las cuentas a Pol, Mónica, Leyre y Joaquín. Nadie puede autoasignarse un perfil.
 4. Desactiva las nuevas altas públicas en la configuración de Authentication. Aunque se creara una quinta cuenta, las políticas no le permitirían acceder al viaje.
 5. En **Project Settings → API** (o **Connect / API Keys**), copia la URL del proyecto y la clave pública **Publishable** o **anon**. Nunca uses **service_role** o **secret** en variables `VITE_*`.
@@ -36,7 +36,7 @@ Usa un proyecto dedicado a esta aplicación, porque el esquema crea tablas con n
 - Añade una idea desde un móvil; abre otra cuenta en otro navegador y comprueba que aparece automáticamente.
 - Comenta, vota y guarda un favorito. El voto es visible para el grupo; el favorito solo para quien lo guarda.
 - Recarga ambos navegadores para comprobar persistencia.
-- Una cuenta no vinculada a los cuatro perfiles debe recibir un rechazo y no poder consultar datos desde la API pública.
+- Una cuenta no vinculada a un perfil autorizado debe recibir un rechazo y no poder consultar datos desde la API pública.
 
 Las pruebas locales ejecutan las políticas PostgreSQL reales con PGlite, además de la integración del modo SQLite. Todavía hace falta verificar Supabase Auth y Realtime contra tu proyecto real. No se ha probado un despliegue remoto con los valores de tu cuenta.
 
@@ -55,3 +55,15 @@ En esta sesión se ha preparado `/workspace/artifacts/japon-2026-netlify.zip`. D
 ## Vaciar el itinerario de un proyecto ya publicado
 
 Ejecuta `supabase/clear-activities.sql` una sola vez en SQL Editor. Elimina todas las actividades existentes y sus comentarios, votos y favoritos asociados. Conserva usuarios, ideas y sus datos. No repitas esta consulta después de añadir planes nuevos, porque los borraría. Los siguientes despliegues no vuelven a crear actividades iniciales.
+
+## Familias MF y HG e invitaciones sin compartir contraseñas
+
+1. Tras el despliegue de esta versión, ejecuta `supabase/families.sql` en SQL Editor. Asigna MF a Pol, Mónica, Leyre y Joaquín; prepara los perfiles HG de Álvaro, Carla, Walter y Lourdes. Conserva cuentas, contraseñas y actividades. No habilita registro público ni permite cambiar la familia desde el navegador.
+2. En Authentication → URL Configuration, establece **Site URL** con la URL HTTPS de la web de Netlify. Si usas un redirect específico, añádelo a Redirect URLs; evita comodines innecesarios.
+3. En Authentication → Users → Add user → **Invite user**, introduce el correo de cada miembro HG. No crees una contraseña para ellos. Supabase envía el enlace y crea su cuenta Auth.
+4. Copia los User UID, rellena `supabase/hg-members.example.sql` y ejecútalo antes de que intenten entrar. La invitación no concede por sí sola acceso a los datos del viaje: debe existir esta vinculación administrativa.
+5. Cada invitado abre su correo, sigue el enlace a la web y elige su contraseña de al menos 12 caracteres. El envío de correos depende de los límites y configuración SMTP de Supabase; si se limita el envío, configura SMTP en su panel o reintenta cuando el proveedor lo permita. No uses enlaces de invitación en un chat compartido.
+
+MF ve su calendario por defecto. HG ve Osaka desde el 1/12, Kanazawa del 6 al 7/12, Takayama del 7 al 9/12 y Tokio del 9 al 14/12. «Todos» muestra solo actividades marcadas como compartidas dentro de los días 1–6 y 9–14 de diciembre; el 6 corresponde a la parte compartida en Kioto antes de separarse las rutas. Cada actividad permite elegir MF, HG o Todos; los calendarios MF y HG incluyen los planes compartidos. Las fechas y ciudades del calendario son orientación de ruta y no crean actividades ni reservas.
+
+Los filtros organizan la visualización, no son barreras de acceso entre familias: todos los miembros invitados siguen colaborando sobre el viaje. Los favoritos siguen siendo personales. La aplicación admite usuarios adicionales sin el antiguo límite de cuatro perfiles.

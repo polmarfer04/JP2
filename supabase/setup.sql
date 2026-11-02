@@ -1,10 +1,23 @@
 -- Ejecutar en el SQL Editor de un proyecto Supabase dedicado a JAPÓN 2026.
 BEGIN;
 CREATE TABLE IF NOT EXISTS public.profiles (
- id text PRIMARY KEY CHECK (id IN ('pol','monica','leyre','joaquin')),
+ id text PRIMARY KEY,
  auth_id uuid UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL,
  name text NOT NULL, color text NOT NULL
 );
+-- Preserve existing accounts and allow additional invited family members.
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_id_check;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS family text NOT NULL DEFAULT 'MF';
+DO $$ BEGIN
+ IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='profiles_family_check' AND conrelid='public.profiles'::regclass) THEN
+  ALTER TABLE public.profiles ADD CONSTRAINT profiles_family_check CHECK (family IN ('MF','HG'));
+ END IF;
+END $$;
+UPDATE public.profiles SET family='MF' WHERE id IN ('pol','monica','leyre','joaquin') AND family IS DISTINCT FROM 'MF';
+INSERT INTO public.profiles(id,name,color,family) VALUES
+ ('alvaro','Álvaro','#5e8a86','HG'),('carla','Carla','#a87999','HG'),
+ ('walter','Walter','#7778a5','HG'),('lourdes','Lourdes','#ad855e','HG')
+ ON CONFLICT(id) DO NOTHING;
 CREATE TABLE IF NOT EXISTS public.items (
  id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
  type text NOT NULL CHECK (type IN ('activity','idea','task','tip','memory')),
@@ -49,18 +62,21 @@ BEGIN
  END IF;
  IF jsonb_typeof(NEW.data) IS DISTINCT FROM 'object' THEN RAISE EXCEPTION 'Datos no válidos'; END IF;
  FOR k,v IN SELECT * FROM jsonb_each(NEW.data) LOOP
-  IF k NOT IN ('title','url','city','category','status','date','time','notes','participants','description') THEN RAISE EXCEPTION 'Campo no válido: %',k; END IF;
+  IF k NOT IN ('title','url','city','category','status','date','time','notes','participants','description','family') THEN RAISE EXCEPTION 'Campo no válido: %',k; END IF;
   IF k='participants' THEN
-   IF jsonb_typeof(v) IS DISTINCT FROM 'array' OR NOT v <@ '["pol","monica","leyre","joaquin"]'::jsonb THEN RAISE EXCEPTION 'Participantes no válidos'; END IF;
+   IF jsonb_typeof(v) IS DISTINCT FROM 'array' THEN RAISE EXCEPTION 'Participantes no válidos'; END IF;
+   IF EXISTS (SELECT 1 FROM jsonb_array_elements_text(v) AS participant(id) WHERE NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id=participant.id)) THEN RAISE EXCEPTION 'Participantes no válidos'; END IF;
   ELSIF jsonb_typeof(v) IS DISTINCT FROM 'string' OR char_length(v #>> '{}') > 5000 THEN RAISE EXCEPTION 'Texto no válido o demasiado largo';
   END IF;
  END LOOP;
  IF coalesce(char_length(trim(NEW.data->>'title')),0) NOT BETWEEN 1 AND 180 THEN RAISE EXCEPTION 'Título obligatorio (máximo 180 caracteres)'; END IF;
  IF coalesce(NEW.data->>'url','') <> '' AND (NEW.data->>'url') !~* '^https?://[^/@[:space:]]+([/?#][^[:space:]]*)?$' THEN RAISE EXCEPTION 'El enlace debe ser http o https'; END IF;
  IF NEW.type='idea' AND coalesce(NEW.data->>'url','')='' THEN RAISE EXCEPTION 'La idea necesita un enlace'; END IF;
+ IF NEW.data ? 'family' AND NEW.data->>'family' NOT IN ('MF','HG','Todos') THEN RAISE EXCEPTION 'Familia no válida'; END IF;
  IF NEW.type='activity' THEN
   IF coalesce(NEW.data->>'date','') !~ '^2026-(11|12)-[0-9]{2}$' THEN RAISE EXCEPTION 'Fecha obligatoria'; END IF;
   IF (NEW.data->>'date')::date NOT BETWEEN DATE '2026-11-28' AND DATE '2026-12-15' THEN RAISE EXCEPTION 'Fecha fuera del viaje'; END IF;
+  IF NEW.data->>'family'='Todos' AND NOT (((NEW.data->>'date') BETWEEN '2026-12-01' AND '2026-12-06') OR ((NEW.data->>'date') BETWEEN '2026-12-09' AND '2026-12-14')) THEN RAISE EXCEPTION 'Todos solo admite los días compartidos (1–6 y 9–14 de diciembre)'; END IF;
  END IF;
  IF coalesce(NEW.data->>'time','')<>'' AND (NEW.data->>'time') !~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' THEN RAISE EXCEPTION 'Hora incorrecta'; END IF;
  RETURN NEW;

@@ -2,7 +2,7 @@
 
 **Publicación en Netlify + Supabase:** sigue [DEPLOY-NETLIFY.md](DEPLOY-NETLIFY.md). Esa modalidad usa PostgreSQL y Supabase Auth; las instrucciones de SQLite y Render de este documento son la alternativa local.
 
-Aplicación privada para Pol, Mónica, Leyre y Joaquín. React + Vite, Express y SQLite (Node 24). Sin servicios externos de pago ni claves de API. Los datos se guardan en el servidor y se sincronizan mediante Server-Sent Events; no se usa localStorage como base de datos.
+Aplicación privada para las familias Marhuenda Fernández (MF) y Hoffmann Gaspar (HG). React + Vite, Express y SQLite (Node 24). Sin servicios externos de pago ni claves de API. Los datos se guardan en el servidor y se sincronizan mediante Server-Sent Events; no se usa localStorage como base de datos.
 
 ## Desarrollo
 
@@ -42,7 +42,8 @@ Producción requiere HTTPS en el navegador: la cookie de sesión es Secure y Htt
 
 ## Incluido
 
-- Inicio privado con cuenta atrás, ruta, actividad próxima e ideas recientes.
+- Inicio privado con cuenta atrás, ruta de la familia, actividad próxima e ideas recientes.
+- Calendarios MF, HG y Todos: rutas distintas del 6 al 9 de diciembre y planes compartidos del 1 al 6 y del 9 al 14. Invitaciones de Supabase con elección individual de contraseña.
 - Calendario de 18 días y vista por ciudad. Crear, editar y eliminar actividades, fechas y horas para reorganizarlas.
 - Itinerario inicialmente vacío para añadir los planes del grupo. Se mantienen las fechas del viaje y la ruta. No existe un menú Ciudades separado; las tarjetas de destino abren el itinerario filtrado.
 - Muro con enlaces originales, categorías, filtros, búsqueda, estados, favoritos personales, comentarios y tres tipos de voto por persona.

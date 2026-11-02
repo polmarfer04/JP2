@@ -20,7 +20,7 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  await as('','anon');await assert.rejects(pg.query('SELECT * FROM public.items'),/permission denied/);
  await as(outsider);assert.equal((await pg.query('SELECT * FROM public.items')).rows.length,0);
  await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('tip','{\"title\":\"Intruder\"}','pol')"),/row-level security/);
- await as(pol);assert.equal((await pg.query('SELECT * FROM public.profiles')).rows.length,4);
+ await as(pol);assert.equal((await pg.query('SELECT * FROM public.profiles')).rows.length,8);
  assert.equal((await pg.query("SELECT * FROM public.items WHERE type='activity'")).rows.length,0);
  await pg.query("INSERT INTO public.items(id,type,data,author) VALUES('test-activity','activity',$1,'pol')",[JSON.stringify({title:'Actividad de prueba',date:'2026-11-29',city:'Osaka'})]);
  await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('idea','{\"title\":\"Unsafe\",\"url\":\"javascript:alert(1)\"}','pol')"),/http/);
@@ -47,6 +47,20 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  await pg.query("DELETE FROM public.items WHERE id='test-activity'");
  await pg.exec('RESET ROLE');await pg.exec(schema);
  assert.equal((await pg.query("SELECT * FROM public.items WHERE id='test-activity'")).rows.length,0);
+ await pg.exec(readFileSync('supabase/families.sql','utf8'));
+ await pg.exec(readFileSync('supabase/families.sql','utf8'));
+ assert.equal((await pg.query("SELECT auth_id,family FROM public.profiles WHERE id='pol'")).rows[0].auth_id,pol);
+ assert.equal((await pg.query("SELECT family FROM public.profiles WHERE id='pol'")).rows[0].family,'MF');
+ assert.equal((await pg.query("SELECT count(*)::int AS n FROM public.profiles WHERE family='HG'")).rows[0].n,4);
+ await pg.query("UPDATE public.profiles SET auth_id=$1 WHERE id='alvaro'",[outsider]);
+ await as(outsider);
+ const hgData={title:'Plan HG',date:'2026-12-07',city:'Takayama',family:'HG',participants:['alvaro','carla','walter','lourdes']};
+ await pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'alvaro')",[JSON.stringify(hgData)]);
+ await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'alvaro')",[JSON.stringify({...hgData,date:'2026-12-08',family:'Todos'})]),/días compartidos/);
+ await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'alvaro')",[JSON.stringify({...hgData,participants:['unknown']})]),/Participantes/);
+ await assert.rejects(pg.query("UPDATE public.profiles SET family='MF' WHERE id='alvaro'"),/permission denied/);
+ await pg.exec('RESET ROLE');
+
  await pg.exec(readFileSync('supabase/clear-activities.sql','utf8'));
  assert.equal((await pg.query("SELECT * FROM public.items WHERE type='activity'")).rows.length,0);
  assert.equal((await pg.query("SELECT * FROM public.items WHERE id=$1",[id])).rows.length,1);

@@ -2,14 +2,16 @@ import { createClient } from '@supabase/supabase-js';
 const env = import.meta.env || {};
 export const cloud = env.VITE_BACKEND === 'supabase';
 const configured = env.VITE_SUPABASE_URL && env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const linkType=typeof window!=='undefined'?new URLSearchParams(window.location.hash.slice(1)).get('type'):null;
+export const passwordLink=cloud&&['invite','recovery'].includes(linkType);
 const client = cloud && configured ? createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY) : null;
 function check(result) { if (result.error) throw new Error(result.error.message); return result.data; }
 async function profile() {
   const { user } = check(await client.auth.getUser());
   if (!user) return null;
-  const row = check(await client.from('profiles').select('id,name,color').eq('auth_id',user.id).maybeSingle());
+  const row = check(await client.from('profiles').select('*').eq('auth_id',user.id).maybeSingle());
   if (!row) { await client.auth.signOut(); throw Error('Tu cuenta no tiene acceso a este viaje. Consulta al administrador.'); }
-  return row;
+  return {id:row.id,name:row.name,color:row.color,family:row.family||'MF'};
 }
 export async function api(path, method='GET', body) {
   if (!cloud) {
@@ -17,6 +19,16 @@ export async function api(path, method='GET', body) {
     const data = await response.json(); if (!response.ok) throw Error(data.error || 'No se pudo completar la acción'); return data;
   }
   if (!client) throw Error('Falta conectar Supabase. Configura las variables públicas de la web y vuelve a desplegar.');
+  if (path === '/password-session') {
+    const {session}=check(await client.auth.getSession());
+    if(!session)throw Error('El enlace no es válido o ha caducado. Pide una nueva invitación.');
+    return {ok:true};
+  }
+  if (path === '/password') {
+    if(typeof body.password!=='string'||body.password.length<12)throw Error('Usa al menos 12 caracteres.');
+    check(await client.auth.updateUser({password:body.password}));
+    return {ok:true};
+  }
   if (path === '/login') {
     check(await client.auth.signInWithPassword({email:body.email,password:body.password}));
     return {user:await profile()};
@@ -29,10 +41,10 @@ export async function api(path, method='GET', body) {
   const user = await profile(); if (!user) throw Error('Inicia sesión para continuar');
   if (path === '/state') {
     const [users,items,comments,votes,favorites] = await Promise.all([
-      client.from('profiles').select('id,name,color'),client.from('items').select('*').order('created',{ascending:false}),
+      client.from('profiles').select('*'),client.from('items').select('*').order('created',{ascending:false}),
       client.from('comments').select('*').order('created'),client.from('votes').select('*'),client.from('favorites').select('*')
     ]);
-    return {users:check(users),items:check(items).map(({data,...item})=>({...data,...item})),comments:check(comments),votes:check(votes),favorites:check(favorites)};
+    return {users:check(users).map(u=>({id:u.id,name:u.name,color:u.color,family:u.family||'MF'})),items:check(items).map(({data,...item})=>({...data,...item})),comments:check(comments),votes:check(votes),favorites:check(favorites)};
   }
   if (path === '/items' && method === 'POST') {
     const {type,...data} = body;
