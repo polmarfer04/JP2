@@ -21,9 +21,8 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  await as(outsider);assert.equal((await pg.query('SELECT * FROM public.items')).rows.length,0);
  await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('tip','{\"title\":\"Intruder\"}','pol')"),/row-level security/);
  await as(pol);assert.equal((await pg.query('SELECT * FROM public.profiles')).rows.length,4);
- let cruise=(await pg.query("SELECT data FROM public.items WHERE id='cruise'")).rows[0].data;
- assert.equal(cruise.date,'2026-11-29');assert.equal(cruise.time,'20:10');
- assert.equal((await pg.query("SELECT data->>'date' AS date FROM public.items WHERE id='shirakawa'")).rows[0].date,'2026-12-08');
+ assert.equal((await pg.query("SELECT * FROM public.items WHERE type='activity'")).rows.length,0);
+ await pg.query("INSERT INTO public.items(id,type,data,author) VALUES('test-activity','activity',$1,'pol')",[JSON.stringify({title:'Actividad de prueba',date:'2026-11-29',city:'Osaka'})]);
  await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('idea','{\"title\":\"Unsafe\",\"url\":\"javascript:alert(1)\"}','pol')"),/http/);
  await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('tip','{\"title\":\"Spoof\"}','monica')"),/row-level security/);
  await assert.rejects(pg.query("UPDATE public.profiles SET auth_id=$1 WHERE id='leyre'",[outsider]),/permission denied/);
@@ -45,8 +44,14 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  await pg.query('SELECT public.edit_item($1,$2)',[id,JSON.stringify({description:'Notas compartidas'})]);
  assert.equal((await pg.query('SELECT data FROM public.items WHERE id=$1',[id])).rows[0].data.title,'Ramen');
  await assert.rejects(pg.query("UPDATE public.items SET author='monica' WHERE id=$1",[id]),/autoría/);
- await pg.query("DELETE FROM public.items WHERE id='cruise'");
+ await pg.query("DELETE FROM public.items WHERE id='test-activity'");
  await pg.exec('RESET ROLE');await pg.exec(schema);
- assert.equal((await pg.query("SELECT * FROM public.items WHERE id='cruise'")).rows.length,0);
+ assert.equal((await pg.query("SELECT * FROM public.items WHERE id='test-activity'")).rows.length,0);
+ await pg.exec(readFileSync('supabase/clear-activities.sql','utf8'));
+ assert.equal((await pg.query("SELECT * FROM public.items WHERE type='activity'")).rows.length,0);
+ assert.equal((await pg.query("SELECT * FROM public.items WHERE id=$1",[id])).rows.length,1);
+ assert.equal((await pg.query("SELECT * FROM public.comments WHERE item_id=$1",[id])).rows.length,1);
+ await pg.exec(schema);
+ assert.equal((await pg.query("SELECT * FROM public.items WHERE type='activity'")).rows.length,0);
  } finally {await pg.close();}
 });

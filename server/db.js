@@ -13,21 +13,7 @@ CREATE TABLE IF NOT EXISTS votes(item_id TEXT REFERENCES items(id) ON DELETE CAS
 CREATE TABLE IF NOT EXISTS favorites(item_id TEXT REFERENCES items(id) ON DELETE CASCADE,user_id TEXT REFERENCES users(id),PRIMARY KEY(item_id,user_id));`);
 for(const [id,name,color] of [['pol','Pol','#b64136'],['monica','Mónica','#c78b48'],['leyre','Leyre','#808c68'],['joaquin','Joaquín','#647e96']]) db.prepare('INSERT OR IGNORE INTO users VALUES(?,?,?,NULL)').run(id,name,color);
 db.exec("CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY)");
-const seeded=db.prepare("SELECT key FROM meta WHERE key='seeded'").get();
-const add=(id,data)=> !seeded && db.prepare('INSERT OR IGNORE INTO items VALUES(?,?,?,?,?)').run(id,'activity',JSON.stringify({participants:['pol','monica','leyre','joaquin'],notes:'',...data}),'pol','2026-11-02T00:00:00.000Z');
-const a=(id,date,title,time='',status='Planeada',city='Osaka',notes='')=>add(id,{date,title,time,status,city,notes});
-a('flight-out','2026-11-28','Barcelona → Shanghái · CA840','11:05','Confirmada','Barcelona','Hora local de Barcelona. Conexión CA857 hacia Osaka.');
-a('arrival','2026-11-29','Llegada a Kansai · CA857','15:00','Confirmada','Osaka');
-a('den','2026-11-29','Paseo por Den Den Town');a('dot','2026-11-29','Explorar Dotonbori');
-a('cruise','2026-11-29','Crucero por Dotonbori','20:10','Confirmada','Osaka','Minatomachi Pier. Presentarse a las 20:00. Duración aproximada: 20 minutos.');
-a('usj','2026-11-30','Universal Studios Japan','','Confirmada','Osaka','Entradas adquiridas. Atracciones y organización pendientes.');
-['Santuario Namba Yasaka','Shinsekai y Torre Tsutenkaku','Templo Shitennoji','Abeno Harukas 300','Shinsaibashi-suji','Dotonbori · Glico Running Man','Templo Hozenji','Hozenji Yokocho'].forEach((t,i)=>a('osaka-1-'+i,'2026-12-01',t));
-a('kobe','2026-12-02','Excursión a Kobe','','Planeada','Kobe');
-['Castillo de Osaka','Kuromon Ichiba Market','Den Den Town','Namba Parks'].forEach((t,i)=>a('osaka-3-'+i,'2026-12-03',t));
-a('kyoto','2026-12-03','Traslado a Kioto','','Planeada','Kioto');a('takayama','2026-12-06','Traslado a Takayama','','Planeada','Takayama');
-a('shirakawa','2026-12-08','Takayama → Shirakawa-go → Kanazawa','08:20','Confirmada','Kanazawa','Reserva para cuatro personas. Encuentro a las 08:10 en Takayama. Duración: 7 horas. Punto exacto pendiente de adjuntar.');
-a('tokyo','2026-12-09','Traslado a Tokio','','Planeada','Tokio');
-a('flight-home','2026-12-14','Narita → Shanghái · CA920','19:30','Confirmada','Tokio','Hora local de Japón. Conexión CA839 hacia Barcelona.');
-a('home','2026-12-15','Llegada a Barcelona · CA839','07:25','Confirmada','Barcelona');
-
-db.prepare("INSERT OR IGNORE INTO meta VALUES('seeded')").run();
+// One-time local migration: clear the previous itinerary, then preserve new plans.
+if (!db.prepare("SELECT key FROM meta WHERE key='activities-cleared-v1'").get()) {
+ db.exec("BEGIN IMMEDIATE; DELETE FROM items WHERE type='activity'; INSERT OR IGNORE INTO meta VALUES('seeded'); INSERT INTO meta VALUES('activities-cleared-v1'); COMMIT;");
+}

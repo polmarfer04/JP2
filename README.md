@@ -44,7 +44,7 @@ Producción requiere HTTPS en el navegador: la cookie de sesión es Secure y Htt
 
 - Inicio privado con cuenta atrás, ruta, actividad próxima e ideas recientes.
 - Calendario de 18 días y vista por ciudad. Crear, editar y eliminar actividades, fechas y horas para reorganizarlas.
-- Itinerario real inicial: crucero solo el 29/11 a las 20:10; Takayama 6–8/12; excursión del 8/12 hacia Kanazawa. Sin planes confirmados inventados en Kioto o Tokio.
+- Itinerario inicialmente vacío para añadir los planes del grupo. Se mantienen las fechas del viaje y la ruta. No existe un menú Ciudades separado; las tarjetas de destino abren el itinerario filtrado.
 - Muro con enlaces originales, categorías, filtros, búsqueda, estados, favoritos personales, comentarios y tres tipos de voto por persona.
 - Conversión transaccional de idea a actividad, evitando conversiones duplicadas.
 - Checklist compartida, enlaces a recuerdos y consejos editables.

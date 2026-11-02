@@ -6,7 +6,7 @@ Esta opción no necesita servidor Node en Netlify ni disco de Render. Netlify al
 
 Usa un proyecto dedicado a esta aplicación, porque el esquema crea tablas con nombres como `items` y `profiles`.
 
-1. Abre **SQL Editor** y ejecuta el contenido completo de `supabase/setup.sql`. Crea tablas, permisos por fila (RLS), funciones, Realtime y el itinerario inicial. Se puede repetir sin restaurar actividades borradas.
+1. Abre **SQL Editor** y ejecuta el contenido completo de `supabase/setup.sql`. Crea tablas, permisos por fila (RLS), funciones, Realtime y un itinerario vacío. Se puede repetir sin restaurar actividades borradas.
 2. En **Authentication → Users → Add user → Create new user**, crea los cuatro usuarios con sus correos y contraseñas propias. Si eliges confirmarlos manualmente, verifica antes que cada dirección es correcta. No uses el flujo de invitación por correo: esta versión todavía no tiene pantalla para establecer contraseñas desde invitaciones.
 3. Copia los cuatro User UID y sustituye los marcadores de `supabase/members.example.sql`. Ejecuta ese archivo en SQL Editor para vincular las cuentas a Pol, Mónica, Leyre y Joaquín. Nadie puede autoasignarse un perfil.
 4. Desactiva las nuevas altas públicas en la configuración de Authentication. Aunque se creara una quinta cuenta, las políticas no le permitirían acceder al viaje.
@@ -44,10 +44,14 @@ Las pruebas locales ejecutan las políticas PostgreSQL reales con PGlite, ademá
 
 Copia `.env.example` a `.env`, rellena únicamente los valores públicos y ejecuta `npm run dev`. Vite carga esas variables; la interfaz accede directamente a Supabase. Sin `VITE_BACKEND=supabase`, se conserva la versión local con Express y SQLite. `npm test` comprueba ambos esquemas; `npm run build` comprueba la compilación. Las variables públicas se incorporan al bundle de Vite y es normal que sean visibles: la privacidad depende de las políticas RLS, no de ocultar la clave anon.
 
-Netlify no tiene acceso a la base SQLite local. El SQL solo incorpora el itinerario inicial; si se han creado ideas reales en SQLite, deben migrarse por separado antes de cambiar de backend. Los documentos PDF, la carga de fotos y la recuperación de contraseñas desde la interfaz siguen pendientes. La sesión de Supabase se conserva en el navegador; los datos compartidos residen en PostgreSQL, no en localStorage.
+Netlify no tiene acceso a la base SQLite local. El SQL inicial no incorpora actividades; si se han creado ideas reales en SQLite, deben migrarse por separado antes de cambiar de backend. Los documentos PDF, la carga de fotos y la recuperación de contraseñas desde la interfaz siguen pendientes. La sesión de Supabase se conserva en el navegador; los datos compartidos residen en PostgreSQL, no en localStorage.
 
 ## Subida manual mediante Netlify Drop
 
 Cuando ya se dispone de la URL y la clave pública de Supabase, también se puede compilar con `npm run build:netlify` y publicar el contenido de `dist/` mediante https://app.netlify.com/drop. El comando lee las variables públicas de `.env.local` o del entorno, con prioridad del entorno. Los archivos `_headers` y `_redirects` de la salida conservan las cabeceras de seguridad y el enrutamiento en esta modalidad.
 
 En esta sesión se ha preparado `/workspace/artifacts/japon-2026-netlify.zip`. Descomprímelo y arrastra a Netlify Drop la carpeta que contiene `index.html` y `assets/`. La configuración pública ya está incluida en el bundle; para esta subida manual no es necesario introducir variables en Netlify. No se adjuntan datos privados. El ZIP no crea tablas ni usuarios: completa antes de usar la aplicación los pasos de Supabase de esta guía. Cambiar el proyecto o la clave pública requiere recompilar y subir una nueva versión.
+
+## Vaciar el itinerario de un proyecto ya publicado
+
+Ejecuta `supabase/clear-activities.sql` una sola vez en SQL Editor. Elimina todas las actividades existentes y sus comentarios, votos y favoritos asociados. Conserva usuarios, ideas y sus datos. No repitas esta consulta después de añadir planes nuevos, porque los borraría. Los siguientes despliegues no vuelven a crear actividades iniciales.
