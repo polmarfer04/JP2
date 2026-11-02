@@ -25,7 +25,7 @@ a('usj','2026-11-30','Universal Studios Japan','','Confirmada','Osaka','Entradas
 a('kobe','2026-12-02','Excursión a Kobe','','Planeada','Kobe');
 ['Castillo de Osaka','Kuromon Ichiba Market','Den Den Town','Namba Parks'].forEach((t,i)=>a('osaka-3-'+i,'2026-12-03',t));
 a('kyoto','2026-12-03','Traslado a Kioto','','Planeada','Kioto');a('takayama','2026-12-06','Traslado a Takayama','','Planeada','Takayama');
-a('shirakawa','2026-12-08','Takayama → Shirakawa-go → Kanazawa','08:20','Confirmada','Shirakawa-go','Reserva para cuatro personas. Encuentro a las 08:10 en Takayama. Duración: 7 horas. Punto exacto pendiente de adjuntar.');
+a('shirakawa','2026-12-08','Takayama → Shirakawa-go → Kanazawa','08:20','Confirmada','Kanazawa','Reserva para cuatro personas. Encuentro a las 08:10 en Takayama. Duración: 7 horas. Punto exacto pendiente de adjuntar.');
 a('tokyo','2026-12-09','Traslado a Tokio','','Planeada','Tokio');
 a('flight-home','2026-12-14','Narita → Shanghái · CA920','19:30','Confirmada','Tokio','Hora local de Japón. Conexión CA839 hacia Barcelona.');
 a('home','2026-12-15','Llegada a Barcelona · CA839','07:25','Confirmada','Barcelona');
