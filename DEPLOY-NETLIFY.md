@@ -69,3 +69,7 @@ MF ve su calendario por defecto. HG ve Osaka desde el 1/12, Kanazawa del 6 al 7/
 Los filtros organizan la visualización, no son barreras de acceso entre familias: todos los miembros invitados siguen colaborando sobre el viaje. Los favoritos siguen siendo personales. La aplicación admite usuarios adicionales sin el antiguo límite de cuatro perfiles.
 
 El 7 de diciembre se comparte el plan en Takayama. El día 8 mantiene itinerarios separados. Si ya ejecutaste `families.sql` antes de añadir este día, aplica `supabase/takayama-shared.sql` para actualizar la validación sin tocar cuentas ni actividades. Las actividades existentes no cambian de familia automáticamente: elige Todos para los planes compartidos del día 7.
+
+## Añadir los vuelos de MF
+
+Con la migración de familias aplicada, ejecuta `supabase/mf-flights.sql` en SQL Editor. Añade únicamente los cuatro registros de vuelos solicitados para MF: salida CA840 el 28/11 a las 11:05, llegada CA857 el 29/11 a KIX a las 15:00, salida CA920 desde NRT el 14/12 a las 19:30 y llegada CA839 el 15/12 a Barcelona a las 07:25. Todas las horas son locales y las llegadas se identifican explícitamente. No inventa horarios de conexión. Se pueden editar desde el itinerario. Ejecutarlo de nuevo no duplica ni sobrescribe registros existentes con esos identificadores. No se vuelven a añadir automáticamente al arrancar ni al desplegar.

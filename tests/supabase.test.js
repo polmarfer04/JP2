@@ -69,5 +69,16 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  assert.equal((await pg.query("SELECT * FROM public.comments WHERE item_id=$1",[id])).rows.length,1);
  await pg.exec(schema);
  assert.equal((await pg.query("SELECT * FROM public.items WHERE type='activity'")).rows.length,0);
+
+ await pg.exec(readFileSync('supabase/mf-flights.sql','utf8'));
+ await pg.exec(readFileSync('supabase/mf-flights.sql','utf8'));
+ const flights=(await pg.query("SELECT id,data FROM public.items WHERE id LIKE 'mf-flight-%' ORDER BY id")).rows;
+ assert.equal(flights.length,4);
+ for(const flight of flights){assert.equal(flight.data.family,'MF');assert.equal(flight.data.status,'Confirmada');assert.deepEqual(flight.data.participants,['pol','monica','leyre','joaquin']);}
+ const flight=id=>flights.find(f=>f.id===id).data;
+ assert.equal(flight('mf-flight-ca840').date,'2026-11-28');assert.equal(flight('mf-flight-ca840').time,'11:05');
+ assert.equal(flight('mf-flight-ca857').date,'2026-11-29');assert.equal(flight('mf-flight-ca857').time,'15:00');assert.match(flight('mf-flight-ca857').notes,/corresponde a la llegada/);
+ assert.equal(flight('mf-flight-ca920').date,'2026-12-14');assert.equal(flight('mf-flight-ca920').time,'19:30');
+ assert.equal(flight('mf-flight-ca839').date,'2026-12-15');assert.equal(flight('mf-flight-ca839').time,'07:25');assert.match(flight('mf-flight-ca839').notes,/Europe\/Madrid/);
  } finally {await pg.close();}
 });
