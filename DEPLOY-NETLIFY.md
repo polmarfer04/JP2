@@ -73,3 +73,7 @@ El 7 de diciembre se comparte el plan en Takayama. El día 8 mantiene itinerario
 ## Añadir los vuelos de MF
 
 Con la migración de familias aplicada, ejecuta `supabase/mf-flights.sql` en SQL Editor. Añade únicamente los cuatro registros de vuelos solicitados para MF: salida CA840 el 28/11 a las 11:05, llegada CA857 el 29/11 a KIX a las 15:00, salida CA920 desde NRT el 14/12 a las 19:30 y llegada CA839 el 15/12 a Barcelona a las 07:25. Todas las horas son locales y las llegadas se identifican explícitamente. No inventa horarios de conexión. Se pueden editar desde el itinerario. Ejecutarlo de nuevo no duplica ni sobrescribe registros existentes con esos identificadores. No se vuelven a añadir automáticamente al arrancar ni al desplegar.
+
+## Vuelos HG desde Málaga
+
+Ejecuta `supabase/hg-flights.sql` después de la migración de familias. Añade TK1306 el 30/11 (17:40 AGP → 23:55 IST), TK86 el 1/12 (02:25 IST → 19:10 KIX), TK301 el 14/12 (21:55 NRT → 05:45 IST del 15/12) y TK1303 el 15/12 (08:30 IST → 11:10 AGP). Cada registro se ordena por salida local; las notas incluyen las llegadas, la escala y los cambios de fecha. El calendario HG abarca ahora del 30/11 al 15/12. No modifica las ventanas de planes compartidos. Las zonas horarias corresponden al origen del tramo: Europe/Madrid, Europe/Istanbul o Asia/Tokyo. Repetir la importación no crea duplicados ni sobrescribe modificaciones posteriores.

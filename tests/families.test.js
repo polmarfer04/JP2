@@ -1,5 +1,5 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
-import {isSharedDate,activityFamily,visibleActivity,visibleDate,destinationForDate,cityDates} from '../src/families.js';
+import {isSharedDate,activityFamily,visibleActivity,visibleDate,destinationForDate,cityDates,activityTimeZone} from '../src/families.js';
 test('Family calendars include shared plans and keep the opposite routes separate',()=>{
  const mf={family:'MF',date:'2026-12-07'},hg={family:'HG',date:'2026-12-07'},shared={family:'Todos',date:'2026-12-03'};
  assert.equal(visibleActivity(mf,'MF'),true);assert.equal(visibleActivity(mf,'HG'),false);assert.equal(visibleActivity(hg,'HG'),true);assert.equal(visibleActivity(hg,'MF'),false);
@@ -12,6 +12,9 @@ test('Family calendars include shared plans and keep the opposite routes separat
  for(const date of ['2026-12-01','2026-12-06','2026-12-07','2026-12-09','2026-12-14'])assert.equal(isSharedDate(date),true);
  for(const date of ['2026-11-30','2026-12-08','2026-12-15'])assert.equal(isSharedDate(date),false);
  assert.equal(visibleDate('2026-11-29','HG'),false);assert.equal(visibleDate('2026-12-01','HG'),true);assert.equal(visibleDate('2026-12-15','MF'),true);
+ assert.equal(visibleDate('2026-11-30','HG'),true);assert.equal(visibleDate('2026-12-15','HG'),true);
+ assert.equal(destinationForDate('2026-11-30','HG'),'Málaga → Estambul');assert.equal(destinationForDate('2026-12-15','HG'),'Estambul → Málaga · Llegada a las 11:10');
+ assert.equal(activityTimeZone({city:'Málaga'}),'Europe/Madrid');assert.equal(activityTimeZone({city:'Estambul'}),'Europe/Istanbul');assert.equal(activityTimeZone({city:'Tokio'}),'Asia/Tokyo');
  assert.equal(destinationForDate('2026-12-06','HG'),'Kioto → Kanazawa');assert.equal(destinationForDate('2026-12-07','HG'),'Kanazawa → Takayama');assert.equal(destinationForDate('2026-12-09','HG'),'Takayama → Tokio');
  assert.equal(destinationForDate('2026-12-06','MF'),'Kioto → Takayama');assert.equal(destinationForDate('2026-12-08','MF'),'Takayama → Kanazawa');
  assert.equal(cityDates('Kanazawa','HG'),'6 — 7 DIC');assert.equal(cityDates('Takayama','HG'),'7 — 9 DIC');assert.equal(cityDates('Takayama','MF'),'6 — 8 DIC');

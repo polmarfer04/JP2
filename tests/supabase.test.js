@@ -80,5 +80,15 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  assert.equal(flight('mf-flight-ca857').date,'2026-11-29');assert.equal(flight('mf-flight-ca857').time,'15:00');assert.match(flight('mf-flight-ca857').notes,/corresponde a la llegada/);
  assert.equal(flight('mf-flight-ca920').date,'2026-12-14');assert.equal(flight('mf-flight-ca920').time,'19:30');
  assert.equal(flight('mf-flight-ca839').date,'2026-12-15');assert.equal(flight('mf-flight-ca839').time,'07:25');assert.match(flight('mf-flight-ca839').notes,/Europe\/Madrid/);
+ await pg.exec(readFileSync('supabase/hg-flights.sql','utf8'));
+ await pg.exec(readFileSync('supabase/hg-flights.sql','utf8'));
+ const hgFlights=(await pg.query("SELECT id,data FROM public.items WHERE id LIKE 'hg-flight-%'")).rows;
+ assert.equal(hgFlights.length,4);
+ for(const f of hgFlights){assert.equal(f.data.family,'HG');assert.deepEqual(f.data.participants,['alvaro','carla','walter','lourdes']);}
+ const hgFlight=id=>hgFlights.find(f=>f.id===id).data;
+ assert.equal(hgFlight('hg-flight-tk1306').date,'2026-11-30');assert.equal(hgFlight('hg-flight-tk1306').time,'17:40');assert.match(hgFlight('hg-flight-tk1306').notes,/23:55/);
+ assert.equal(hgFlight('hg-flight-tk86').date,'2026-12-01');assert.equal(hgFlight('hg-flight-tk86').time,'02:25');assert.match(hgFlight('hg-flight-tk86').notes,/19:10/);
+ assert.equal(hgFlight('hg-flight-tk301').date,'2026-12-14');assert.equal(hgFlight('hg-flight-tk301').time,'21:55');assert.match(hgFlight('hg-flight-tk301').notes,/15\/12\/2026 a las 05:45/);
+ assert.equal(hgFlight('hg-flight-tk1303').date,'2026-12-15');assert.equal(hgFlight('hg-flight-tk1303').time,'08:30');assert.match(hgFlight('hg-flight-tk1303').notes,/11:10/);
  } finally {await pg.close();}
 });
