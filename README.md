@@ -48,9 +48,9 @@ Producción requiere HTTPS en el navegador: la cookie de sesión es Secure y Htt
 - Itinerario inicialmente vacío para añadir los planes del grupo. Se mantienen las fechas del viaje y la ruta. No existe un menú Ciudades separado; las tarjetas de destino abren el itinerario filtrado.
 - Muro con enlaces originales, categorías, filtros, búsqueda, estados, favoritos personales, comentarios y tres tipos de voto por persona.
 - Conversión transaccional de idea a actividad, evitando conversiones duplicadas.
-- Checklist compartida, enlaces a recuerdos y consejos editables.
+- Checklist compartida para preparativos.
 - Mapa OSM de referencia y búsquedas de ubicación en Maps. No se inventan coordenadas.
-- Reservas confirmadas privadas con instrucciones. Todos los miembros pueden editar los datos del grupo.
+- Actividades confirmadas con instrucciones dentro del itinerario. Todos los miembros pueden editar los datos del grupo.
 - Manifiesto para instalación donde el navegador lo admita. No hay caché de información privada.
 
 ## Límites de esta primera versión
@@ -75,3 +75,5 @@ Las horas son locales: actividades en Japón, Asia/Tokyo; salida y llegada en Ba
 6. Abre la URL, inicia sesión, guarda una idea y comprueba desde otro dispositivo que aparece. Reinicia el servicio y confirma que sigue guardada.
 
 El servidor reconoce `RENDER_EXTERNAL_URL` como origen autorizado. Si configuras dominio propio, define `APP_ORIGIN` con su URL HTTPS exacta, sin barra final. No se incluyen documentos privados ni contraseñas en el repositorio. Este archivo prepara el despliegue, pero no crea servicios ni contrata planes automáticamente.
+
+Las secciones Documentos, Recuerdos e Información útil se han retirado de la interfaz. Sus datos anteriores, si existen, se conservan en la base de datos y no aparecen en el buscador global.
