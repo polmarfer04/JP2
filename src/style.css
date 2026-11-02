@@ -6,3 +6,11 @@
 .family-filter{font-size:11px;color:#7b8073;display:flex;align-items:center;gap:9px}.family-filter select{margin:0;max-width:340px}.family-badge{margin-left:6px;background:#ede9e0;color:#7b6b54}.members .family-badge{margin-top:8px}
 
 .day-destination{margin:-5px 0 15px;font-size:12px;color:#8b7464}.password-page{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f1ece3}.password-page .dialog{max-height:none}.password-page .primary{margin:20px 0}
+
+.city-pair{grid-column:span 2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px;border-radius:9px;overflow:hidden;height:192px;background:#f8f7f3;isolation:isolate}
+.city-pair .city-card{border-radius:0;height:100%;min-width:0}
+.city-pair .city-card:hover{transform:none;filter:brightness(1.08)}
+.city-pair .city-card:focus-visible{outline-offset:-4px;z-index:1}
+@media(min-width:1500px){.city-pair{height:225px}}
+@media(max-width:1100px){.city-pair{height:170px}}
+@media(max-width:760px){.city-pair{flex:0 0 292px;height:190px;scroll-snap-align:center}.city-pair .city-card{height:100%}}
