@@ -90,5 +90,16 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  assert.equal(hgFlight('hg-flight-tk86').date,'2026-12-01');assert.equal(hgFlight('hg-flight-tk86').time,'02:25');assert.match(hgFlight('hg-flight-tk86').notes,/19:10/);
  assert.equal(hgFlight('hg-flight-tk301').date,'2026-12-14');assert.equal(hgFlight('hg-flight-tk301').time,'21:55');assert.match(hgFlight('hg-flight-tk301').notes,/15\/12\/2026 a las 05:45/);
  assert.equal(hgFlight('hg-flight-tk1303').date,'2026-12-15');assert.equal(hgFlight('hg-flight-tk1303').time,'08:30');assert.match(hgFlight('hg-flight-tk1303').notes,/11:10/);
+ await pg.exec(readFileSync('supabase/activity-links.sql','utf8'));
+ await pg.exec(readFileSync('supabase/activity-links.sql','utf8'));
+ await as(pol);
+ const mapsUrl='https://maps.app.goo.gl/example';
+ await pg.query("SELECT public.edit_item('mf-flight-ca840',$1)",[JSON.stringify({url:'https://www.youtube.com/watch?v=example',maps_url:mapsUrl})]);
+ const linked=(await pg.query("SELECT data FROM public.items WHERE id='mf-flight-ca840'")).rows[0].data;
+ assert.equal(linked.url,'https://www.youtube.com/watch?v=example');assert.equal(linked.maps_url,mapsUrl);
+ await assert.rejects(pg.query("SELECT public.edit_item('mf-flight-ca840',$1)",[JSON.stringify({maps_url:'javascript:alert(1)'})]),/http/);
+ await pg.query("SELECT public.edit_item('mf-flight-ca840',$1)",[JSON.stringify({maps_url:''})]);
+ const cleared=(await pg.query("SELECT data FROM public.items WHERE id='mf-flight-ca840'")).rows[0].data;
+ assert.equal(cleared.maps_url,'');assert.equal(cleared.url,linked.url);
  } finally {await pg.close();}
 });

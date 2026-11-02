@@ -10,7 +10,7 @@ BEGIN
  END IF;
  IF jsonb_typeof(NEW.data) IS DISTINCT FROM 'object' THEN RAISE EXCEPTION 'Datos no válidos'; END IF;
  FOR k,v IN SELECT * FROM jsonb_each(NEW.data) LOOP
-  IF k NOT IN ('title','url','city','category','status','date','time','notes','participants','description','family') THEN RAISE EXCEPTION 'Campo no válido: %',k; END IF;
+  IF k NOT IN ('title','url','city','category','status','date','time','notes','participants','description','family','maps_url') THEN RAISE EXCEPTION 'Campo no válido: %',k; END IF;
   IF k='participants' THEN
    IF jsonb_typeof(v) IS DISTINCT FROM 'array' THEN RAISE EXCEPTION 'Participantes no válidos'; END IF;
    IF EXISTS (SELECT 1 FROM jsonb_array_elements_text(v) AS participant(id) WHERE NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id=participant.id)) THEN RAISE EXCEPTION 'Participantes no válidos'; END IF;
@@ -18,7 +18,9 @@ BEGIN
   END IF;
  END LOOP;
  IF coalesce(char_length(trim(NEW.data->>'title')),0) NOT BETWEEN 1 AND 180 THEN RAISE EXCEPTION 'Título obligatorio (máximo 180 caracteres)'; END IF;
- IF coalesce(NEW.data->>'url','') <> '' AND (NEW.data->>'url') !~* '^https?://[^/@[:space:]]+([/?#][^[:space:]]*)?$' THEN RAISE EXCEPTION 'El enlace debe ser http o https'; END IF;
+ FOREACH k IN ARRAY ARRAY['url','maps_url'] LOOP
+  IF coalesce(NEW.data->>k,'') <> '' AND (NEW.data->>k) !~* '^https?://[^/@[:space:]]+([/?#][^[:space:]]*)?$' THEN RAISE EXCEPTION 'El enlace % debe ser http o https',k; END IF;
+ END LOOP;
  IF NEW.type='idea' AND coalesce(NEW.data->>'url','')='' THEN RAISE EXCEPTION 'La idea necesita un enlace'; END IF;
  IF NEW.data ? 'family' AND NEW.data->>'family' NOT IN ('MF','HG','Todos') THEN RAISE EXCEPTION 'Familia no válida'; END IF;
  IF NEW.type='activity' THEN
@@ -32,5 +34,6 @@ END $$;
 REVOKE ALL ON FUNCTION public.validate_trip_item() FROM PUBLIC, anon, authenticated;
 DROP TRIGGER IF EXISTS validate_trip_item ON public.items;
 CREATE TRIGGER validate_trip_item BEFORE INSERT OR UPDATE ON public.items FOR EACH ROW EXECUTE FUNCTION public.validate_trip_item();
+
 
 COMMIT;
