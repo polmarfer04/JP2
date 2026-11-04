@@ -62,7 +62,7 @@ BEGIN
  END IF;
  IF jsonb_typeof(NEW.data) IS DISTINCT FROM 'object' THEN RAISE EXCEPTION 'Datos no válidos'; END IF;
  FOR k,v IN SELECT * FROM jsonb_each(NEW.data) LOOP
-  IF k NOT IN ('title','url','city','category','status','date','time','notes','participants','description','family','maps_url') THEN RAISE EXCEPTION 'Campo no válido: %',k; END IF;
+  IF k NOT IN ('title','url','city','category','status','date','time','notes','participants','description','family','maps_url','location','lat','lng') THEN RAISE EXCEPTION 'Campo no válido: %',k; END IF;
   IF k='participants' THEN
    IF jsonb_typeof(v) IS DISTINCT FROM 'array' THEN RAISE EXCEPTION 'Participantes no válidos'; END IF;
    IF EXISTS (SELECT 1 FROM jsonb_array_elements_text(v) AS participant(id) WHERE NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id=participant.id)) THEN RAISE EXCEPTION 'Participantes no válidos'; END IF;
@@ -81,6 +81,10 @@ BEGIN
   IF NEW.data->>'family'='Todos' AND NOT (((NEW.data->>'date') BETWEEN '2026-12-01' AND '2026-12-07') OR ((NEW.data->>'date') BETWEEN '2026-12-09' AND '2026-12-14')) THEN RAISE EXCEPTION 'Todos solo admite los días compartidos (1–7 y 9–14 de diciembre)'; END IF;
  END IF;
  IF coalesce(NEW.data->>'time','')<>'' AND (NEW.data->>'time') !~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' THEN RAISE EXCEPTION 'Hora incorrecta'; END IF;
+ IF coalesce(NEW.data->>'lat','')<>'' OR coalesce(NEW.data->>'lng','')<>'' THEN
+  IF coalesce(NEW.data->>'lat','') !~ '^-?[0-9]{1,2}(\.[0-9]+)?$' OR coalesce(NEW.data->>'lng','') !~ '^-?[0-9]{1,3}(\.[0-9]+)?$' THEN RAISE EXCEPTION 'Ubicación no válida'; END IF;
+  IF abs((NEW.data->>'lat')::numeric) > 90 OR abs((NEW.data->>'lng')::numeric) > 180 THEN RAISE EXCEPTION 'Ubicación no válida'; END IF;
+ END IF;
  RETURN NEW;
 END $$;
 REVOKE ALL ON FUNCTION public.validate_trip_item() FROM PUBLIC, anon, authenticated;

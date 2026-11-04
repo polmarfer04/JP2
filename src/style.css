@@ -14,3 +14,15 @@
 @media(min-width:1500px){.city-pair{height:225px}}
 @media(max-width:1100px){.city-pair{height:170px}}
 @media(max-width:760px){.city-pair{flex:0 0 292px;height:190px;scroll-snap-align:center}.city-pair .city-card{height:100%}}
+/* Ubicaciones y mapa */
+.map{z-index:0;background:#e9e6dc}.mini-map{height:180px;width:100%;border:1px solid var(--line);border-radius:10px;margin:10px 0 14px;z-index:0}
+.pin{background:none;border:0}.pin span{display:block;width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--red);border:3px solid #fff;box-shadow:0 2px 6px #0005}
+.pin-mf span{background:#b64136}.pin-hg span{background:#2f6f8f}.pin-todos span{background:#4f7a3a}
+.map-legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.pin-dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-left:6px}.pin-dot.pin-mf{background:#b64136}.pin-dot.pin-hg{background:#2f6f8f}.pin-dot.pin-todos{background:#4f7a3a}
+.location-picker{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0 0 16px;min-width:0}.location-picker legend{font-size:13px;font-weight:500;padding:0 6px}.required{color:var(--red)}
+.location-search{display:flex;gap:8px}.location-search input{flex:1;min-width:0}.location-search button{padding:0 14px;border:1px solid var(--line);border-radius:7px;background:white;font-size:12px;white-space:nowrap}
+.location-results{list-style:none;margin:8px 0 0;padding:0;border:1px solid var(--line);border-radius:8px;background:white;max-height:190px;overflow:auto}.location-results button{width:100%;justify-content:flex-start;text-align:left;padding:9px 11px;font-size:12px;border-bottom:1px solid var(--line)}.location-results li:last-child button{border-bottom:0}.location-results button:hover{background:#f3f1ea}
+.picker-map{height:220px;width:100%;border:1px solid var(--line);border-radius:8px;margin-top:10px;z-index:0;cursor:crosshair}
+.link-button{color:var(--red);text-decoration:underline;font-size:12px;padding:0}
+.badge.no-location{background:#fbecd9;color:#9a5a12}.activity-location{display:flex;align-items:center;gap:5px;color:#6f7268;font-size:12px;margin:4px 0}
+.leaflet-container{font:inherit}

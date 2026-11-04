@@ -24,6 +24,9 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  assert.equal((await pg.query("SELECT * FROM public.items WHERE type='activity'")).rows.length,0);
  await pg.query("INSERT INTO public.items(id,type,data,author) VALUES('test-activity','activity',$1,'pol')",[JSON.stringify({title:'Actividad de prueba',date:'2026-11-29',city:'Osaka'})]);
  await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('idea','{\"title\":\"Unsafe\",\"url\":\"javascript:alert(1)\"}','pol')"),/http/);
+ await pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'pol')",[JSON.stringify({title:'Castillo de Osaka',date:'2026-11-30',city:'Osaka',location:'Castillo de Osaka',lat:'34.687315',lng:'135.526201'})]);
+ await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'pol')",[JSON.stringify({title:'Mal',date:'2026-11-30',lat:'95',lng:'135'})]),/Ubicación/);
+ await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'pol')",[JSON.stringify({title:'Mal',date:'2026-11-30',lat:'34.6'})]),/Ubicación/);
  await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('tip','{\"title\":\"Spoof\"}','monica')"),/row-level security/);
  await assert.rejects(pg.query("UPDATE public.profiles SET auth_id=$1 WHERE id='leyre'",[outsider]),/permission denied/);
  const id=(await pg.query("INSERT INTO public.items(type,data,author) VALUES('idea',$1,'pol') RETURNING id",[JSON.stringify({title:'Ramen',url:'https://example.com',city:'Tokio',status:'Nueva'})])).rows[0].id;
@@ -92,6 +95,10 @@ test('Supabase PostgreSQL schema: membership, RLS, validation, transactional sch
  assert.equal(hgFlight('hg-flight-tk1303').date,'2026-12-15');assert.equal(hgFlight('hg-flight-tk1303').time,'08:30');assert.match(hgFlight('hg-flight-tk1303').notes,/11:10/);
  await pg.exec(readFileSync('supabase/activity-links.sql','utf8'));
  await pg.exec(readFileSync('supabase/activity-links.sql','utf8'));
+ await pg.exec(readFileSync('supabase/activity-locations.sql','utf8'));
+ await pg.exec(readFileSync('supabase/activity-locations.sql','utf8'));
+ await pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'pol')",[JSON.stringify({title:'Fushimi Inari',date:'2026-12-04',city:'Kioto',location:'Fushimi Inari-taisha',lat:'34.967146',lng:'135.772695'})]);
+ await assert.rejects(pg.query("INSERT INTO public.items(type,data,author) VALUES('activity',$1,'pol')",[JSON.stringify({title:'Mal',date:'2026-12-04',lat:'34.9',lng:'200'})]),/Ubicación/);
  await as(pol);
  const mapsUrl='https://maps.app.goo.gl/example';
  await pg.query("SELECT public.edit_item('mf-flight-ca840',$1)",[JSON.stringify({url:'https://www.youtube.com/watch?v=example',maps_url:mapsUrl})]);
